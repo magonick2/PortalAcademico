@@ -1,0 +1,46 @@
+@model IEnumerable<PortalAcademico.Models.Curso>
+
+@{
+    ViewData["Title"] = "Catálogo de Cursos";
+}
+
+<h2>Catálogo de Cursos</h2>
+
+<form asp-action="Index" method="get" class="row g-3 mb-4">
+    <div class="col-md-4">
+        <input type="text" name="buscarNombre" class="form-control" placeholder="Buscar por nombre..." />
+    </div>
+    <div class="col-md-3">
+        <input type="number" name="buscarCreditos" class="form-control" placeholder="Créditos..." />
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Créditos</th>
+            <th>Horario</th>
+            <th>Cupo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model) {
+            <tr>
+                <td>@item.Codigo</td>
+                <td>@item.Nombre</td>
+                <td>@item.Creditos</td>
+                <td>@item.HorarioInicio - @item.HorarioFin</td>
+                <td>@item.CupoMaximo</td>
+                <td>
+                    <a asp-action="Inscribirse" asp-route-cursoId="@item.Id" class="btn btn-success btn-sm">Inscribirse</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
