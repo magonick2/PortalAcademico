@@ -3,7 +3,21 @@
 @{
     ViewData["Title"] = "Catálogo de Cursos";
 }
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Error:</strong> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Mensaje"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 <h2>Catálogo de Cursos</h2>
 
 <form asp-action="Index" method="get" class="row g-3 mb-4">
@@ -38,7 +52,7 @@
                 <td>@item.HorarioInicio - @item.HorarioFin</td>
                 <td>@item.CupoMaximo</td>
                 <td>
-                    <a asp-action="Inscribirse" asp-route-cursoId="@item.Id" class="btn btn-success btn-sm">Inscribirse</a>
+                    <a asp-action="Inscribirse" asp-route-id="@item.Id" class="btn btn-success btn-sm">Inscribirme</a>
                 </td>
             </tr>
         }
