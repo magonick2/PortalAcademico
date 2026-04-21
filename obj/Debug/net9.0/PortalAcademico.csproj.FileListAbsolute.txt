@@ -285,3 +285,7 @@ C:\Users\gon15\OneDrive\Escritorio\pc2\PortalAcademico\obj\Debug\net9.0\refint\P
 C:\Users\gon15\OneDrive\Escritorio\pc2\PortalAcademico\obj\Debug\net9.0\PortalAcademico.pdb
 C:\Users\gon15\OneDrive\Escritorio\pc2\PortalAcademico\obj\Debug\net9.0\PortalAcademico.genruntimeconfig.cache
 C:\Users\gon15\OneDrive\Escritorio\pc2\PortalAcademico\obj\Debug\net9.0\ref\PortalAcademico.dll
+C:\Users\gon15\OneDrive\Escritorio\pc2\PortalAcademico\bin\Debug\net9.0\Microsoft.Extensions.Caching.StackExchangeRedis.dll
+C:\Users\gon15\OneDrive\Escritorio\pc2\PortalAcademico\bin\Debug\net9.0\Pipelines.Sockets.Unofficial.dll
+C:\Users\gon15\OneDrive\Escritorio\pc2\PortalAcademico\bin\Debug\net9.0\StackExchange.Redis.dll
+C:\Users\gon15\OneDrive\Escritorio\pc2\PortalAcademico\bin\Debug\net9.0\System.Diagnostics.DiagnosticSource.dll

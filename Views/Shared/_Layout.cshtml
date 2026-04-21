@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -29,6 +32,17 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Cursos" asp-action="Index">Ver Cursos</a>
                         </li>
+
+                        @* Lógica de Sesión para la Pregunta 4 *@
+                        @if (HttpContextAccessor.HttpContext?.Session.GetString("LastCourseId") != null)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-primary font-weight-bold" asp-controller="Cursos" asp-action="Details" 
+                                   asp-route-id="@HttpContextAccessor.HttpContext.Session.GetString("LastCourseId")">
+                                    Volver al curso: @HttpContextAccessor.HttpContext.Session.GetString("LastCourseName")
+                                </a>
+                            </li>
+                        }
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>
