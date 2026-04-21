@@ -2,59 +2,100 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PortalAcademico.Data;
 using PortalAcademico.Models;
-using Microsoft.AspNetCore.Authorization; // Agregado para seguridad
-using System.Security.Claims;             // Agregado para obtener ID del usuario
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+// Librerías necesarias para que funcione la Pregunta 4
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 
 namespace PortalAcademico.Controllers;
 
 public class CursosController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly IDistributedCache _cache; // Inyectado para Redis
 
-    public CursosController(ApplicationDbContext context)
+    public CursosController(ApplicationDbContext context, IDistributedCache cache)
     {
         _context = context;
+        _cache = cache;
     }
 
-    // GET: Cursos (Con Filtros)
+    // GET: Cursos (Con Filtros y Caché Redis 60s)
     public async Task<IActionResult> Index(string buscarNombre, int? buscarCreditos)
     {
-        var cursosQuery = _context.Cursos.Where(c => c.Activo);
+        string cacheKey = "CursosActivosList";
+        List<Curso> cursos = null;
+
+        // Intentar obtener de la caché
+        var cachedData = await _cache.GetStringAsync(cacheKey);
+
+        if (string.IsNullOrEmpty(cachedData))
+        {
+            // Si no hay caché, buscamos en DB (manteniendo tu lógica de activos)
+            cursos = await _context.Cursos.Where(c => c.Activo).ToListAsync();
+
+            // Serializamos a JSON para guardar en Redis
+            var options = new DistributedCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromSeconds(60));
+            
+            await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(cursos), options);
+        }
+        else
+        {
+            // Deserializamos el JSON de Redis
+            cursos = JsonSerializer.Deserialize<List<Curso>>(cachedData);
+        }
+
+        // Aplicamos tus filtros sobre la lista resultante
+        var query = cursos.AsQueryable();
 
         if (!string.IsNullOrEmpty(buscarNombre))
         {
-            cursosQuery = cursosQuery.Where(c => c.Nombre.Contains(buscarNombre));
+            query = query.Where(c => c.Nombre.Contains(buscarNombre, StringComparison.OrdinalIgnoreCase));
         }
 
         if (buscarCreditos.HasValue)
         {
-            cursosQuery = cursosQuery.Where(c => c.Creditos == buscarCreditos);
+            query = query.Where(c => c.Creditos == buscarCreditos);
         }
 
-        return View(await cursosQuery.ToListAsync());
+        return View(query.ToList());
     }
 
-    // --- MÉTODOS AGREGADOS PARA EL PASO 3 ---
+    // Nuevo método Details con lógica de SESIÓN
+    public async Task<IActionResult> Details(int? id)
+    {
+        if (id == null) return NotFound();
 
-    // Acción para procesar la inscripción
-    [Authorize] // Solo usuarios logueados
+        var curso = await _context.Cursos.FirstOrDefaultAsync(m => m.Id == id);
+        
+        if (curso == null) return NotFound();
+
+        // GUARDAR EN SESIÓN: Requerimiento de la Pregunta 4
+        HttpContext.Session.SetString("LastCourseId", curso.Id.ToString());
+        HttpContext.Session.SetString("LastCourseName", curso.Nombre);
+
+        return View(curso);
+    }
+
+    // --- TUS MÉTODOS EXISTENTES DEL PASO 3 ---
+
+    [Authorize]
     public async Task<IActionResult> Inscribirse(int id)
     {
-        // 1. Obtener ID del usuario logueado
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        // 2. VALIDACIÓN: Verificar si ya existe la matrícula para este curso y usuario
         var yaInscrito = await _context.Matriculas
             .AnyAsync(m => m.CursoId == id && m.UsuarioId == userId);
 
         if (yaInscrito)
         {
-            // Enviamos alerta al Index si ya está inscrito
             TempData["Error"] = "Ya te encuentras inscrito en este curso.";
             return RedirectToAction(nameof(Index));
         }
 
-        // 3. Crear el registro de Matrícula
         var matricula = new Matricula
         {
             CursoId = id,
@@ -66,18 +107,18 @@ public class CursosController : Controller
         _context.Matriculas.Add(matricula);
         await _context.SaveChangesAsync();
 
-        // 4. Mensaje de éxito
+        // RECOMENDACIÓN: Invalidar caché al inscribirse para actualizar datos
+        await _cache.RemoveAsync("CursosActivosList");
+
         TempData["Mensaje"] = "¡Inscripción realizada con éxito!";
         return RedirectToAction(nameof(MisCursos));
     }
 
-    // Acción para ver la lista de cursos del alumno
     [Authorize]
     public async Task<IActionResult> MisCursos()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        // Traemos las matrículas del usuario actual incluyendo los datos del objeto Curso
         var misMatriculas = await _context.Matriculas
             .Include(m => m.Curso)
             .Where(m => m.UsuarioId == userId)
