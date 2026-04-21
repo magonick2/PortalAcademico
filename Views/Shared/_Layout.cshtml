@@ -32,6 +32,9 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Cursos" asp-action="Index">Ver Cursos</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-primary fw-bold" asp-controller="Coordinador" asp-action="Index">PANEL COORDINADOR</a>
+                        </li>
 
                         @* Lógica de Sesión para la Pregunta 4 *@
                         @if (HttpContextAccessor.HttpContext?.Session.GetString("LastCourseId") != null)
